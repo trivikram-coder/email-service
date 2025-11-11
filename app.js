@@ -1,64 +1,60 @@
 const express = require("express");
-const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
+const axios = require("axios");
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-// Generate 6-digit OTP
-const otp = () => Math.floor(100000 + Math.random() * 900000);
-
-// Function to send mail via Brevo SMTP
 const sendMail = async (email) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp-relay.brevo.com", // Brevo SMTP server
-      port: 587,                    // Port for STARTTLS
-      secure: false,                // Use TLS
-      auth: {
-        user: process.env.BREVO_EMAIL, // Brevo login
-        pass: process.env.BREVO_PASS   // Brevo SMTP key
+    const apiKey = process.env.BREVO_API_KEY;
+    const sendData = {
+      sender: {
+        name: "Smart Expense Tracker Team",
+        email: process.env.MAIL
       },
-      logger: true,
-      debug: true
-    });
-
-    const code = otp();
-
-    const info = await transporter.sendMail({
-      from: `"Smart Expense Tracker Team" <${process.env.MAIL}>`,
-      to: email,
+      to: [
+        { email }
+      ],
       subject: "OTP Verification",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
+      htmlContent: `
+        <div style="font-family: Arial; padding: 20px;">
           <h2>Smart Expense Tracker</h2>
-          <p>Your verification code is:</p>
-          <h1 style="letter-spacing: 3px;">${code}</h1>
+          <p>Your verification code is: <strong>123456</strong></p>
           <p>This OTP expires in 10 minutes.</p>
         </div>
       `
-    });
+    };
 
-    console.log("✅ Email sent successfully:", info.response);
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      sendData,
+      {
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+          "api-key": apiKey
+        }
+      }
+    );
+
+    console.log("✅ Raw HTTP Email Sent:", response.data);
     return true;
   } catch (err) {
-    console.error("❌ Failed to send email:", err);
+    console.error("❌ Raw HTTP Send Failed:", err.response ? err.response.data : err.message);
     return false;
   }
 };
 
-// API to send OTP
 app.post("/send-mail", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ message: "Email is required" });
-
   const success = await sendMail(email);
   if (success) res.status(200).json({ message: "Email sent successfully" });
   else res.status(500).json({ message: "Failed to send email" });
 });
 
-// Test route
-app.get("/", (req, res) => res.send("✅ Smart Expense Tracker Mail API is running!"));
+app.get("/", (req, res) => res.send("Mail API running"));
 
-app.listen(process.env.PORT, () => console.log(`🚀 Server running on port ${process.env.PORT}`));
+app.listen(process.env.PORT, () => console.log(`Server on port ${process.env.PORT}`));
