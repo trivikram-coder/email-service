@@ -32,7 +32,7 @@ const sendMail = async (email) => {
     text: `Enter this OTP to verify your account: ${code}`,
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; padding: 20px;">
-        <p>Hi <b>Vikram</b>,</p>
+        <p>Hi <b>${email}</b>,</p>
         <p>Your verification code is:</p>
         <div style="margin: 20px 0; text-align: center;">
           <span style="font-size: 30px; font-weight: bold; background: #f3f3f3; padding: 10px 20px; border-radius: 6px;">
