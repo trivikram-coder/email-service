@@ -5,10 +5,12 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-const otp=()=>{
+const otpFun=()=>{
   return Math.floor(100000+Math.random()*900000);
-  
+
 }
+const otp=otpFun()
+console.log(otp)
 const sendMail = async (email) => {
   try {
     const apiKey = process.env.BREVO_API_KEY;
