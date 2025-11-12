@@ -1,15 +1,20 @@
 // Import Packages
 const express = require("express");
-const mongoose = require("mongoose");
-const { sendMail, otp } = require("../Utilities/sendEmail");
-const app = express();
-const Otp=require("../Model/OTP")
-// Middleware
-app.use(express.json());
+const crypto = require("crypto");
+const { sendMail, otpFun } = require("../Utilities/sendEmail");
+const Otp = require("../Model/OTP");
 
+const router = express.Router();
+router.use(express.json());
+
+// Utility to hash OTP
+const hashOtp = (otp) =>
+  crypto.createHash("sha256").update(String(otp)).digest("hex");
+
+// =======================
 // 📤 Send OTP
 // =======================
-app.post("/send-otp", async (req, res) => {
+router.post("/send-otp", async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -17,20 +22,25 @@ app.post("/send-otp", async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    // Generate and send OTP via email
-    await sendMail(email);
-    
+    // 1️⃣ Generate OTP
+    const otp = otpFun();
+    console.log(otp)
+    // 2️⃣ Send OTP via email
+    await sendMail(email, otp);
 
-    // Update existing OTP or insert a new one
+    // 3️⃣ Hash OTP before saving
+    const hashedOtp = hashOtp(otp);
+
+    // 4️⃣ Store or update OTP record
     await Otp.findOneAndUpdate(
-      { email },                     // find document by email
-      { otp, createdAt: Date.now() }, // update OTP and timestamp
-      { upsert: true, new: true }     // create new if not exists
+      { email },
+      { otp: hashedOtp, createdAt: Date.now() },
+      { upsert: true, new: true }
     );
 
     res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
-    console.error(error);
+    console.error("Send OTP Error:", error);
     res.status(500).json({ message: "Unable to send OTP", error: error.message });
   }
 });
@@ -38,7 +48,7 @@ app.post("/send-otp", async (req, res) => {
 // =======================
 // ✅ Verify OTP
 // =======================
-app.post("/verify-otp/:email", async (req, res) => {
+router.post("/verify-otp/:email", async (req, res) => {
   try {
     const { otp } = req.body;
     const email = req.params.email;
@@ -47,21 +57,28 @@ app.post("/verify-otp/:email", async (req, res) => {
       return res.status(400).json({ message: "Email and OTP are required" });
     }
 
+    // 1️⃣ Get record for email
     const record = await Otp.findOne({ email });
 
     if (!record) {
       return res.status(400).json({ message: "OTP expired or not found" });
     }
 
-    if (record.otp != otp) {
+    // 2️⃣ Compare hashes (not plain OTP)
+    const hashedInputOtp = hashOtp(otp);
+
+    if (record.otp !== hashedInputOtp) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
+    // 3️⃣ Delete OTP after successful verification
+    await Otp.deleteOne({ email });
+
     res.status(200).json({ message: "OTP validated successfully" });
   } catch (error) {
-    console.error(error);
+    console.error("Verify OTP Error:", error);
     res.status(500).json({ message: "Unable to validate OTP", error: error.message });
   }
 });
 
-module.exports = app;
+module.exports = router;

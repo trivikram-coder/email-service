@@ -1,19 +1,20 @@
-const mongoose=require("mongoose")
-const schema = new mongoose.Schema({
+const mongoose = require("mongoose");
+
+const otpSchema = new mongoose.Schema({
   otp: {
-    type: Number,
+    type: String, // store hashed string, not number
     required: true,
   },
   email: {
     type: String,
     required: true,
-    unique: true, // ensures one OTP per email
+    unique: true,
   },
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 300, // document auto-deletes after 5 minutes
+    expires: 300, // auto delete after 5 minutes
   },
 });
 
-module.exports= mongoose.model("Otp", schema);
+module.exports = mongoose.model("Otp", otpSchema);

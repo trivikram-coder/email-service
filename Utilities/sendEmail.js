@@ -6,9 +6,9 @@ const otpFun=()=>{
   return Math.floor(100000+Math.random()*900000);
 
 }
-const otp=otpFun()
 
-const sendMail = async (email) => {
+
+const sendMail = async (email,otp) => {
   try {
     const apiKey = process.env.BREVO_API_KEY;
     const sendData = {
@@ -49,4 +49,4 @@ const sendMail = async (email) => {
   }
 };
 
-module.exports={sendMail,otp}
+module.exports={sendMail,otpFun}
