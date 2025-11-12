@@ -5,7 +5,10 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-
+const otp=()=>{
+  return Math.floor(100000+Math.random()*900000);
+  
+}
 const sendMail = async (email) => {
   try {
     const apiKey = process.env.BREVO_API_KEY;
@@ -21,7 +24,7 @@ const sendMail = async (email) => {
       htmlContent: `
         <div style="font-family: Arial; padding: 20px;">
           <h2>Smart Expense Tracker</h2>
-          <p>Your verification code is: <strong>123456</strong></p>
+          <p>Your verification code is: <strong>${otp}</strong></p>
           <p>This OTP expires in 10 minutes.</p>
         </div>
       `
