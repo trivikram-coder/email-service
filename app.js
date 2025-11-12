@@ -10,7 +10,7 @@ const otpFun=()=>{
 
 }
 const otp=otpFun()
-console.log(otp)
+
 const sendMail = async (email) => {
   try {
     const apiKey = process.env.BREVO_API_KEY;
