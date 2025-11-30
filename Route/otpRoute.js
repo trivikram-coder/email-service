@@ -16,17 +16,19 @@ const hashOtp = (otp) =>
 // =======================
 router.post("/send-otp", async (req, res) => {
   try {
-    const { email,appName } = req.body;
+    const { email,appName,type } = req.body;
 
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
-
+    if(!appName || !type){
+      return res.status(400).json({message:"App name and type of service required"})
+    }
     // 1️⃣ Generate OTP
     const otp = otpFun();
-    console.log(otp)
+
     // 2️⃣ Send OTP via email
-    await sendMail(email, otp,appName);
+    await sendMail(email, otp,appName,type);
 
     // 3️⃣ Hash OTP before saving
     const hashedOtp = hashOtp(otp);
