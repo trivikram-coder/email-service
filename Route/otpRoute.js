@@ -3,10 +3,10 @@ const express = require("express");
 const crypto = require("crypto");
 const { sendMail, otpFun } = require("../Utilities/sendEmail");
 const Otp = require("../Model/OTP");
-
+const jwt=require("jsonwebtoken")
 const router = express.Router();
 router.use(express.json());
-
+require("dotenv").config()
 // Utility to hash OTP
 const hashOtp = (otp) =>
   crypto.createHash("sha256").update(String(otp)).digest("hex");
@@ -54,7 +54,10 @@ router.post("/verify-otp/:email", async (req, res) => {
   try {
     const { otp } = req.body;
     const email = req.params.email;
+    console.log(email)
 
+    const token=jwt.sign({email,purpose:"RESET_PASSWORD"},process.env.JWT_SECRET,{expiresIn:"2h"})
+    console.log(token)
     if (!email || !otp) {
       return res.status(400).json({ message: "Email and OTP are required" });
     }
@@ -76,7 +79,7 @@ router.post("/verify-otp/:email", async (req, res) => {
     // 3️⃣ Delete OTP after successful verification
     await Otp.deleteOne({ email });
 
-    res.status(200).json({ message: "OTP validated successfully" });
+    res.status(200).json({ message: "OTP validated successfully",resetToken:token });
   } catch (error) {
     console.error("Verify OTP Error:", error);
     res.status(500).json({ message: "Unable to validate OTP", error: error.message });
