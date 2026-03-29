@@ -12,7 +12,7 @@ app.use("/otp",otpRoute)
 
 
 
-app.get("/", (req, res) => res.send("Mail API running"));
+app.get("/", (req, res) => res.send("EMail API running"));
 connDb()
 const PORT=process.env.PORT
 app.listen(PORT, () => console.log(`Server on port ${process.env.PORT}`));
