@@ -1,0 +1,32 @@
+name: Deploy App
+on:
+    push:
+        branches:
+            - main
+            - master
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        
+        steps:
+            - name: Action Checkout
+              uses: actions/checkout@v3
+            - name: Node Js Setup
+              uses: actions/setup-node@v3
+              with:
+                node-version: 18
+            - name: Install Dependencies
+              run: npm install
+            - name: Deploy to EC2
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                host: ${{ secrets.EC2_HOST }}
+                username: ubuntu
+                key: ${{ secrets.EC2_SSH_KEY }}
+                script: |
+                    cd ~/email-service
+                    git fetch origin
+                    git reset --hard origin/main
+                    npm install
+                    pm2 restart emailservice || pm2 start app.js --name emailservice
+                  
